@@ -1,10 +1,12 @@
 import json
 import os
 
+from services.json_service import write_json_with_replacement
 
-def get_all_google_cloud_regions():
+
+def execute_compute_method(sub_service_name, method):
     """
-    Gets all available Google Cloud regions and returns them as a list.
+    Gets all available Google Cloud disks and returns them as a list.
 
     Returns:
       A list of strings, where each string is a Google Cloud region identifier.
@@ -16,36 +18,26 @@ def get_all_google_cloud_regions():
         return []
 
     service = build('compute', 'v1')
-    regions = service.regions().list(
+
+    sub_service = getattr(service, sub_service_name)()
+    results = getattr(sub_service, method)(
         project=os.environ['PROJECT_ID']).execute()
-    return [region['name'] for region in regions['items']]
 
+    return results
 
-def get_all_google_cloud_zones():
-    """
-    Gets all available Google Cloud zones and returns them as a list.
+# dynamic - https://cloud.google.com/compute/docs/reference/rest/v1/machineTypes/list
+method_list = [
+    ('acceleratorTypes', 'aggregatedList'),
+    ('diskTypes', 'aggregatedList'),
+    ('machineTypes', 'aggregatedList'),
+    ('nodeTypes', 'aggregatedList'),
+    ('regions', 'list'),
+    ('zones', 'list')
+]
 
-    Returns:
-      A list of strings, where each string is a Google Cloud zone identifier.
-    """
-    try:
-        from googleapiclient.discovery import build
-    except ImportError:
-        print("Please install the google-api-python-client library to use this function.")
-        return []
-
-    service = build('compute', 'v1')
-    zones = service.zones().list(
-        project=os.environ['PROJECT_ID']).execute()
-    return [zone['name'] for zone in zones['items']]
-
-
-# data/regions.json
-regions = get_all_google_cloud_regions()
-with open('data/regions.json', 'w') as f:
-    json.dump(regions, f, indent=2)
-
-# data/zones.json
-zones = get_all_google_cloud_zones()
-with open('data/zones.json', 'w') as f:
-    json.dump(zones, f, indent=2)
+for sub_service, methodname in method_list:
+    print(sub_service, methodname)
+    results = execute_compute_method(sub_service, methodname)
+    f = f'data/{sub_service}.json'
+    write_json_with_replacement(
+        results, filename=f, old_string=os.environ['PROJECT_ID'], new_string=new_string)
