@@ -25,6 +25,7 @@ def execute_compute_method(sub_service_name, method):
 
     return results
 
+
 # dynamic - https://cloud.google.com/compute/docs/reference/rest/v1/machineTypes/list
 method_list = [
     ('acceleratorTypes', 'aggregatedList'),
@@ -35,6 +36,7 @@ method_list = [
     ('zones', 'list')
 ]
 
+new_string='[PROJECT_ID]'
 for sub_service, methodname in method_list:
     print(sub_service, methodname)
     results = execute_compute_method(sub_service, methodname)
